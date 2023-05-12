@@ -57,9 +57,7 @@ class UtilsTest(unittest.TestCase):
         for host in invalid_hosts:
             try:
                 parsed = parse_host(host)
-                self.fail('Expected to fail but success: %s -> %s' % (
-                    host, parsed
-                ))
+                self.fail(f'Expected to fail but success: {host} -> {parsed}')
             except DockerException:
                 pass
 

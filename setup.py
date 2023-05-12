@@ -17,7 +17,7 @@ if sys.version_info[0] < 3:
 exec(open('docker/version.py').read())
 
 with open('./test-requirements.txt') as test_reqs_txt:
-    test_requirements = [line for line in test_reqs_txt]
+    test_requirements = list(test_reqs_txt)
 
 
 setup(

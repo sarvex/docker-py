@@ -143,8 +143,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'version',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}version', timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
         )
 
     def test_retrieve_server_version(self):
@@ -168,8 +167,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'info',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}info', timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
         )
 
     def test_search(self):
@@ -179,9 +177,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/search',
+            f'{url_prefix}images/search',
             params={'term': 'busybox'},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_image_viz(self):
@@ -198,9 +196,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'events',
+            f'{url_prefix}events',
             params={'since': None, 'until': None, 'filters': None},
-            stream=True
+            stream=True,
         )
 
     def test_events_with_since_until(self):
@@ -214,13 +212,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'events',
-            params={
-                'since': ts - 10,
-                'until': ts + 10,
-                'filters': None
-            },
-            stream=True
+            f'{url_prefix}events',
+            params={'since': ts - 10, 'until': ts + 10, 'filters': None},
+            stream=True,
         )
 
     def test_events_with_filters(self):
@@ -233,13 +227,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
 
         expected_filters = docker.utils.convert_filters(filters)
         fake_request.assert_called_with(
-            url_prefix + 'events',
-            params={
-                'since': None,
-                'until': None,
-                'filters': expected_filters
-            },
-            stream=True
+            f'{url_prefix}events',
+            params={'since': None, 'until': None, 'filters': expected_filters},
+            stream=True,
         )
 
     ###################
@@ -252,9 +242,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         fake_request.assert_called_with(
-            url_prefix + 'images/json',
+            f'{url_prefix}images/json',
             params={'filter': None, 'only_ids': 0, 'all': 1},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_images_quiet(self):
@@ -263,9 +253,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         fake_request.assert_called_with(
-            url_prefix + 'images/json',
+            f'{url_prefix}images/json',
             params={'filter': None, 'only_ids': 1, 'all': 1},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_image_ids(self):
@@ -275,9 +265,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/json',
+            f'{url_prefix}images/json',
             params={'filter': None, 'only_ids': 1, 'all': 0},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_images_filters(self):
@@ -287,10 +277,14 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/json',
-            params={'filter': None, 'only_ids': 0, 'all': 0,
-                    'filters': '{"dangling": ["true"]}'},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/json',
+            params={
+                'filter': None,
+                'only_ids': 0,
+                'all': 0,
+                'filters': '{"dangling": ["true"]}',
+            },
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_list_containers(self):
@@ -300,16 +294,16 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/json',
+            f'{url_prefix}containers/json',
             params={
                 'all': 1,
                 'since': None,
                 'size': 0,
                 'limit': -1,
                 'trunc_cmd': 1,
-                'before': None
+                'before': None,
             },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     #####################
@@ -323,8 +317,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox", "Cmd": ["true"],
@@ -346,8 +339,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -371,8 +363,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -394,8 +385,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -421,8 +411,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -445,8 +434,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -469,8 +457,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -493,8 +480,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox",
@@ -516,8 +502,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox", "Cmd": ["true"],
@@ -542,7 +527,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data'])['VolumesFrom'],
                          ','.join(vol_names))
         self.assertEqual(args[1]['headers'],
@@ -566,8 +551,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''
                             {"Tty": false, "Image": "busybox", "Cmd": ["true"],
@@ -649,12 +633,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.client.start(fake_api.FAKE_CONTAINER_ID)
         except Exception as e:
             raise e
-            self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(json.loads(args[1]['data']), {})
         self.assertEqual(
             args[1]['headers'], {'Content-Type': 'application/json'}
@@ -673,10 +653,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/create'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['LxcConf'] = [
@@ -704,7 +681,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['LxcConf'] = [
@@ -796,7 +773,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         data = json.loads(args[1]['data'])
         port_bindings = data['HostConfig']['PortBindings']
         self.assertTrue('1111/tcp' in port_bindings)
@@ -858,9 +835,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0], url_prefix + 'containers/create'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['Links'] = ['path:alias']
@@ -875,18 +850,20 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             link_path = 'path'
             alias = 'alias'
             self.client.create_container(
-                'busybox', 'true', host_config=create_host_config(
+                'busybox',
+                'true',
+                host_config=create_host_config(
                     links={
-                        link_path + '1': alias + '1',
-                        link_path + '2': alias + '2'
+                        f'{link_path}1': f'{alias}1',
+                        f'{link_path}2': f'{alias}2',
                     }
-                )
+                ),
             )
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['Links'] = [
@@ -910,7 +887,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['Links'] = ['path:alias']
@@ -933,7 +910,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['Privileged'] = True
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         self.assertEqual(json.loads(args[1]['data']), expected_payload)
         self.assertEqual(args[1]['headers'],
                          {'Content-Type': 'application/json'})
@@ -951,10 +928,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(
             json.loads(args[1]['data']),
             {"LxcConf": [{"Value": "lxc.conf.value", "Key": "lxc.conf.k"}]}
@@ -1101,10 +1075,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(
             json.loads(args[1]['data']), {"Links": ["path:alias"]}
         )
@@ -1119,19 +1090,13 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             alias = 'alias'
             self.client.start(
                 fake_api.FAKE_CONTAINER_ID,
-                links={
-                    link_path + '1': alias + '1',
-                    link_path + '2': alias + '2'
-                }
+                links={f'{link_path}1': f'{alias}1', f'{link_path}2': f'{alias}2'},
             )
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(
             json.loads(args[1]['data']),
             {"Links": ["path1:alias1", "path2:alias2"]}
@@ -1152,10 +1117,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(
             json.loads(args[1]['data']), {"Links": ["path:alias"]}
         )
@@ -1170,10 +1132,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(json.loads(args[1]['data']), {"Privileged": True})
         self.assertEqual(args[1]['headers'],
                          {'Content-Type': 'application/json'})
@@ -1188,10 +1147,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'containers/3cc2351ab11b/start'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}containers/3cc2351ab11b/start')
         self.assertEqual(json.loads(args[1]['data']), {})
         self.assertEqual(
             args[1]['headers'], {'Content-Type': 'application/json'}
@@ -1213,7 +1169,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
 
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
@@ -1238,7 +1194,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['CapAdd'] = ['MKNOD']
@@ -1259,7 +1215,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['CapDrop'] = ['MKNOD']
@@ -1283,7 +1239,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         args = fake_request.call_args
-        self.assertEqual(args[0][0], url_prefix + 'containers/create')
+        self.assertEqual(args[0][0], f'{url_prefix}containers/create')
         expected_payload = self.base_create_payload()
         expected_payload['HostConfig'] = create_host_config()
         expected_payload['HostConfig']['Devices'] = [
@@ -1316,9 +1272,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/resize',
+            f'{url_prefix}containers/3cc2351ab11b/resize',
             params={'h': 15, 'w': 120},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_rename_container(self):
@@ -1331,9 +1287,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command shold not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/rename',
+            f'{url_prefix}containers/3cc2351ab11b/rename',
             params={'name': 'foobar'},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_wait(self):
@@ -1343,8 +1299,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/wait',
-            timeout=None
+            f'{url_prefix}containers/3cc2351ab11b/wait', timeout=None
         )
 
     def test_wait_with_dict_instead_of_id(self):
@@ -1352,11 +1307,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.client.wait({'Id': fake_api.FAKE_CONTAINER_ID})
         except Exception as e:
             raise e
-            self.fail('Command should not raise exception: {0}'.format(e))
-
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/wait',
-            timeout=None
+            f'{url_prefix}containers/3cc2351ab11b/wait', timeout=None
         )
 
     def test_url_compatibility_unix(self):
@@ -1391,11 +1343,16 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/logs',
-            params={'timestamps': 0, 'follow': 0, 'stderr': 1, 'stdout': 1,
-                    'tail': 'all'},
+            f'{url_prefix}containers/3cc2351ab11b/logs',
+            params={
+                'timestamps': 0,
+                'follow': 0,
+                'stderr': 1,
+                'stdout': 1,
+                'tail': 'all',
+            },
             timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
-            stream=False
+            stream=False,
         )
 
         self.assertEqual(
@@ -1410,11 +1367,16 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/logs',
-            params={'timestamps': 0, 'follow': 0, 'stderr': 1, 'stdout': 1,
-                    'tail': 'all'},
+            f'{url_prefix}containers/3cc2351ab11b/logs',
+            params={
+                'timestamps': 0,
+                'follow': 0,
+                'stderr': 1,
+                'stdout': 1,
+                'tail': 'all',
+            },
             timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
-            stream=False
+            stream=False,
         )
 
         self.assertEqual(
@@ -1429,11 +1391,16 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/logs',
-            params={'timestamps': 0, 'follow': 1, 'stderr': 1, 'stdout': 1,
-                    'tail': 'all'},
+            f'{url_prefix}containers/3cc2351ab11b/logs',
+            params={
+                'timestamps': 0,
+                'follow': 1,
+                'stderr': 1,
+                'stdout': 1,
+                'tail': 'all',
+            },
             timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
-            stream=True
+            stream=True,
         )
 
     def test_log_tail(self):
@@ -1443,11 +1410,16 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/logs',
-            params={'timestamps': 0, 'follow': 0, 'stderr': 1, 'stdout': 1,
-                    'tail': 10},
+            f'{url_prefix}containers/3cc2351ab11b/logs',
+            params={
+                'timestamps': 0,
+                'follow': 0,
+                'stderr': 1,
+                'stdout': 1,
+                'tail': 10,
+            },
             timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
-            stream=False
+            stream=False,
         )
 
     def test_diff(self):
@@ -1457,8 +1429,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/changes',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}containers/3cc2351ab11b/changes',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_diff_with_dict_instead_of_id(self):
@@ -1468,8 +1440,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/changes',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}containers/3cc2351ab11b/changes',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_port(self):
@@ -1479,8 +1451,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/json',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}containers/3cc2351ab11b/json',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_stop_container(self):
@@ -1491,9 +1463,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/stop',
+            f'{url_prefix}containers/3cc2351ab11b/stop',
             params={'t': timeout},
-            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS + timeout)
+            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS + timeout),
         )
 
     def test_stop_container_with_dict_instead_of_id(self):
@@ -1505,9 +1477,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/stop',
+            f'{url_prefix}containers/3cc2351ab11b/stop',
             params={'t': timeout},
-            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS + timeout)
+            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS + timeout),
         )
 
     def test_execute_command(self):
@@ -1517,8 +1489,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(args[0][0],
-                         url_prefix + 'exec/3cc2351ab11b/start')
+        self.assertEqual(args[0][0], f'{url_prefix}exec/3cc2351ab11b/start')
 
         self.assertEqual(json.loads(args[1]['data']),
                          json.loads('''{
@@ -1541,8 +1512,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/pause',
-            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS)
+            f'{url_prefix}containers/3cc2351ab11b/pause',
+            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS),
         )
 
     def test_unpause_container(self):
@@ -1551,8 +1522,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
         except Exception as e:
             self.fail('Command should not raise exception: {0}'.format(e))
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/unpause',
-            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS)
+            f'{url_prefix}containers/3cc2351ab11b/unpause',
+            timeout=(docker.client.DEFAULT_TIMEOUT_SECONDS),
         )
 
     def test_kill_container(self):
@@ -1562,9 +1533,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/kill',
+            f'{url_prefix}containers/3cc2351ab11b/kill',
             params={},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_kill_container_with_dict_instead_of_id(self):
@@ -1574,9 +1545,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/kill',
+            f'{url_prefix}containers/3cc2351ab11b/kill',
             params={},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_kill_container_with_signal(self):
@@ -1586,9 +1557,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/kill',
+            f'{url_prefix}containers/3cc2351ab11b/kill',
             params={'signal': signal.SIGTERM},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_restart_container(self):
@@ -1598,9 +1569,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception : {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/restart',
+            f'{url_prefix}containers/3cc2351ab11b/restart',
             params={'t': 2},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_restart_container_with_dict_instead_of_id(self):
@@ -1610,9 +1581,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/restart',
+            f'{url_prefix}containers/3cc2351ab11b/restart',
             params={'t': 2},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_remove_container(self):
@@ -1622,9 +1593,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b',
+            f'{url_prefix}containers/3cc2351ab11b',
             params={'v': False, 'link': False, 'force': False},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_remove_container_with_dict_instead_of_id(self):
@@ -1634,9 +1605,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b',
+            f'{url_prefix}containers/3cc2351ab11b',
             params={'v': False, 'link': False, 'force': False},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_remove_link(self):
@@ -1646,9 +1617,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b',
+            f'{url_prefix}containers/3cc2351ab11b',
             params={'v': False, 'link': True, 'force': False},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_export(self):
@@ -1658,9 +1629,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/export',
+            f'{url_prefix}containers/3cc2351ab11b/export',
             stream=True,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_export_with_dict_instead_of_id(self):
@@ -1670,9 +1641,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/export',
+            f'{url_prefix}containers/3cc2351ab11b/export',
             stream=True,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_inspect_container(self):
@@ -1682,8 +1653,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/json',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}containers/3cc2351ab11b/json',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_container_stats(self):
@@ -1693,9 +1664,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'containers/3cc2351ab11b/stats',
-            timeout=60,
-            stream=True
+            f'{url_prefix}containers/3cc2351ab11b/stats', timeout=60, stream=True
         )
 
     ##################
@@ -1709,10 +1678,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'images/create'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}images/create')
         self.assertEqual(
             args[1]['params'],
             {'tag': None, 'fromImage': 'joffrey/test001'}
@@ -1726,10 +1692,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         args = fake_request.call_args
-        self.assertEqual(
-            args[0][0],
-            url_prefix + 'images/create'
-        )
+        self.assertEqual(args[0][0], f'{url_prefix}images/create')
         self.assertEqual(
             args[1]['params'],
             {'tag': None, 'fromImage': 'joffrey/test001'}
@@ -1743,7 +1706,7 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'commit',
+            f'{url_prefix}commit',
             data='{}',
             headers={'Content-Type': 'application/json'},
             params={
@@ -1751,9 +1714,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
                 'comment': None,
                 'tag': None,
                 'container': '3cc2351ab11b',
-                'author': None
+                'author': None,
             },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_remove_image(self):
@@ -1763,9 +1726,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/e9aa60c60128',
+            f'{url_prefix}images/e9aa60c60128',
             params={'force': False, 'noprune': False},
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_image_history(self):
@@ -1775,8 +1738,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/history',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/test_image/history',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_import_image(self):
@@ -1790,14 +1753,14 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/create',
+            f'{url_prefix}images/create',
             params={
                 'repo': fake_api.FAKE_REPO_NAME,
                 'tag': fake_api.FAKE_TAG_NAME,
-                'fromSrc': fake_api.FAKE_TARBALL_PATH
+                'fromSrc': fake_api.FAKE_TARBALL_PATH,
             },
             data=None,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_import_image_from_file(self):
@@ -1813,14 +1776,14 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/create',
+            f'{url_prefix}images/create',
             params={
                 'repo': fake_api.FAKE_REPO_NAME,
                 'tag': fake_api.FAKE_TAG_NAME,
-                'fromSrc': '-'
+                'fromSrc': '-',
             },
             data='',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
         buf.close()
         os.remove(buf.name)
@@ -1836,14 +1799,14 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/create',
+            f'{url_prefix}images/create',
             params={
                 'repo': fake_api.FAKE_REPO_NAME,
                 'tag': fake_api.FAKE_TAG_NAME,
-                'fromImage': fake_api.FAKE_IMAGE_NAME
+                'fromImage': fake_api.FAKE_IMAGE_NAME,
             },
             data=None,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_inspect_image(self):
@@ -1853,8 +1816,8 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/json',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/test_image/json',
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_insert_image(self):
@@ -1870,12 +1833,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/insert',
-            params={
-                'url': fake_api.FAKE_URL,
-                'path': fake_api.FAKE_PATH
-            },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/test_image/insert',
+            params={'url': fake_api.FAKE_URL, 'path': fake_api.FAKE_PATH},
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_push_image(self):
@@ -1887,14 +1847,12 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/push',
-            params={
-                'tag': None
-            },
+            f'{url_prefix}images/test_image/push',
+            params={'tag': None},
             data='{}',
             headers={'Content-Type': 'application/json'},
             stream=False,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_push_image_with_tag(self):
@@ -1908,14 +1866,14 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/push',
+            f'{url_prefix}images/test_image/push',
             params={
                 'tag': fake_api.FAKE_TAG_NAME,
             },
             data='{}',
             headers={'Content-Type': 'application/json'},
             stream=False,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_push_image_stream(self):
@@ -1927,14 +1885,12 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/test_image/push',
-            params={
-                'tag': None
-            },
+            f'{url_prefix}images/test_image/push',
+            params={'tag': None},
             data='{}',
             headers={'Content-Type': 'application/json'},
             stream=True,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_tag_image(self):
@@ -1944,13 +1900,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/e9aa60c60128/tag',
-            params={
-                'tag': None,
-                'repo': 'repo',
-                'force': 0
-            },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/e9aa60c60128/tag',
+            params={'tag': None, 'repo': 'repo', 'force': 0},
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_tag_image_tag(self):
@@ -1964,13 +1916,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/e9aa60c60128/tag',
-            params={
-                'tag': 'tag',
-                'repo': 'repo',
-                'force': 0
-            },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/e9aa60c60128/tag',
+            params={'tag': 'tag', 'repo': 'repo', 'force': 0},
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_tag_image_force(self):
@@ -1981,13 +1929,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/e9aa60c60128/tag',
-            params={
-                'tag': None,
-                'repo': 'repo',
-                'force': 1
-            },
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            f'{url_prefix}images/e9aa60c60128/tag',
+            params={'tag': None, 'repo': 'repo', 'force': 1},
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_get_image(self):
@@ -1997,9 +1941,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/e9aa60c60128/get',
+            f'{url_prefix}images/e9aa60c60128/get',
             stream=True,
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     def test_load_image(self):
@@ -2009,9 +1953,9 @@ class DockerClientTest(Cleanup, unittest.TestCase):
             self.fail('Command should not raise exception: {0}'.format(e))
 
         fake_request.assert_called_with(
-            url_prefix + 'images/load',
+            f'{url_prefix}images/load',
             data='Byte Stream....',
-            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS
+            timeout=docker.client.DEFAULT_TIMEOUT_SECONDS,
         )
 
     #################
@@ -2283,7 +2227,7 @@ class StreamTest(Cleanup, unittest.TestCase):
 
         mo = re.search(r'Content-Length: ([0-9]+)', headers.decode())
         assert mo
-        content_length = int(mo.group(1))
+        content_length = int(mo[1])
 
         while True:
             if len(data) >= content_length:
@@ -2306,8 +2250,7 @@ class StreamTest(Cleanup, unittest.TestCase):
             b'\r\n'
         ) + b'\r\n'.join(lines)
 
-        with docker.Client(base_url="http+unix://" + self.socket_file) \
-                as client:
+        with docker.Client(base_url=f"http+unix://{self.socket_file}") as client:
             for i in range(5):
                 try:
                     stream = client.build(

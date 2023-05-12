@@ -48,9 +48,8 @@ def mkbuildcontext(dockerfile):
         if six.PY3:
             raise TypeError('Please use io.BytesIO to create in-memory '
                             'Dockerfiles with Python 3')
-        else:
-            dfinfo.size = len(dockerfile.getvalue())
-            dockerfile.seek(0)
+        dfinfo.size = len(dockerfile.getvalue())
+        dockerfile.seek(0)
     elif isinstance(dockerfile, io.BytesIO):
         dfinfo = tarfile.TarInfo('Dockerfile')
         dfinfo.size = len(dockerfile.getvalue())
@@ -64,7 +63,7 @@ def mkbuildcontext(dockerfile):
 
 
 def fnmatch_any(relpath, patterns):
-    return any([fnmatch(relpath, pattern) for pattern in patterns])
+    return any(fnmatch(relpath, pattern) for pattern in patterns)
 
 
 def tar(path, exclude=None):
@@ -138,12 +137,11 @@ def _convert_port_binding(binding):
         else:
             result['HostPort'] = binding[0]
     elif isinstance(binding, dict):
-        if 'HostPort' in binding:
-            result['HostPort'] = binding['HostPort']
-            if 'HostIp' in binding:
-                result['HostIp'] = binding['HostIp']
-        else:
+        if 'HostPort' not in binding:
             raise ValueError(binding)
+        result['HostPort'] = binding['HostPort']
+        if 'HostIp' in binding:
+            result['HostIp'] = binding['HostIp']
     else:
         result['HostPort'] = binding
 
@@ -160,7 +158,7 @@ def convert_port_bindings(port_bindings):
     for k, v in six.iteritems(port_bindings):
         key = str(k)
         if '/' not in key:
-            key = key + '/tcp'
+            key += '/tcp'
         if isinstance(v, list):
             result[key] = [_convert_port_binding(binding) for binding in v]
         else:
@@ -186,10 +184,7 @@ def parse_repository_tag(repo):
         return repo, None
     tag = repo[column_index + 1:]
     slash_index = tag.find('/')
-    if slash_index < 0:
-        return repo[:column_index], tag
-
-    return repo, None
+    return (repo[:column_index], tag) if slash_index < 0 else (repo, None)
 
 
 # Based on utils.go:ParseHost http://tinyurl.com/nkahcfh
@@ -245,7 +240,7 @@ def parse_host(addr):
                 "Invalid port: %s", addr
             )
 
-    elif proto in ("http", "https") and ':' not in addr:
+    elif proto in {"http", "https"} and ':' not in addr:
         raise errors.DockerException(
             "Bind address needs a port: {0}".format(addr))
     else:
@@ -259,17 +254,13 @@ def parse_host(addr):
 def parse_devices(devices):
     device_list = []
     for device in devices:
-        device_mapping = device.split(":")
-        if device_mapping:
+        if device_mapping := device.split(":"):
             path_on_host = device_mapping[0]
             if len(device_mapping) > 1:
                 path_in_container = device_mapping[1]
             else:
                 path_in_container = path_on_host
-            if len(device_mapping) > 2:
-                permissions = device_mapping[2]
-            else:
-                permissions = 'rwm'
+            permissions = device_mapping[2] if len(device_mapping) > 2 else 'rwm'
             device_list.append({"PathOnHost": path_on_host,
                                 "PathInContainer": path_in_container,
                                 "CgroupPermissions": permissions})
@@ -407,14 +398,13 @@ def create_host_config(
             port_bindings
         )
 
-    if extra_hosts is not None:
-        if isinstance(extra_hosts, dict):
-            extra_hosts = [
-                '{0}:{1}'.format(k, v)
-                for k, v in sorted(six.iteritems(extra_hosts))
-            ]
+    if extra_hosts is not None and isinstance(extra_hosts, dict):
+        extra_hosts = [
+            '{0}:{1}'.format(k, v)
+            for k, v in sorted(six.iteritems(extra_hosts))
+        ]
 
-            host_config['ExtraHosts'] = extra_hosts
+        host_config['ExtraHosts'] = extra_hosts
 
     if links is not None:
         if isinstance(links, dict):
@@ -427,9 +417,7 @@ def create_host_config(
         host_config['Links'] = formatted_links
 
     if isinstance(lxc_conf, dict):
-        formatted = []
-        for k, v in six.iteritems(lxc_conf):
-            formatted.append({'Key': k, 'Value': str(v)})
+        formatted = [{'Key': k, 'Value': str(v)} for k, v in six.iteritems(lxc_conf)]
         lxc_conf = formatted
 
     if lxc_conf is not None:
@@ -474,9 +462,7 @@ def create_container_config(
         volumes = [volumes, ]
 
     if isinstance(volumes, list):
-        volumes_dict = {}
-        for vol in volumes:
-            volumes_dict[vol] = {}
+        volumes_dict = {vol: {} for vol in volumes}
         volumes = volumes_dict
 
     if volumes_from:

@@ -119,14 +119,12 @@ class Client(requests.Session):
             raise errors.APIError(e, response, explanation=explanation)
 
     def _result(self, response, json=False, binary=False):
-        assert not (json and binary)
+        assert not json or not binary
         self._raise_for_status(response)
 
         if json:
             return response.json()
-        if binary:
-            return response.content
-        return response.text
+        return response.content if binary else response.text
 
     def _post_json(self, url, data, **kwargs):
         # Go <1.1 can't unserialize null to a string
@@ -165,10 +163,7 @@ class Client(requests.Session):
 
     def _get_raw_response_socket(self, response):
         self._raise_for_status(response)
-        if six.PY3:
-            sock = response.raw._fp.fp.raw
-        else:
-            sock = response.raw._fp.fp._sock
+        sock = response.raw._fp.fp.raw if six.PY3 else response.raw._fp.fp._sock
         try:
             # Keep a reference to the response to stop it being garbage
             # collected. If the response is garbage collected, it will
@@ -235,10 +230,10 @@ class Client(requests.Session):
             _, length = struct.unpack('>BxxxL', header)
             if not length:
                 break
-            data = response.raw.read(length)
-            if not data:
+            if data := response.raw.read(length):
+                yield data
+            else:
                 break
-            yield data
 
     @property
     def api_version(self):
@@ -269,16 +264,14 @@ class Client(requests.Session):
                         yield line
 
             return stream_result() if stream else \
-                self._result(response, binary=True)
+                    self._result(response, binary=True)
 
         sep = bytes() if six.PY3 else str()
 
         if stream:
             return self._multiplexed_response_stream_helper(response)
         else:
-            return sep.join(
-                [x for x in self._multiplexed_buffer_helper(response)]
-            )
+            return sep.join(list(self._multiplexed_buffer_helper(response)))
 
     def attach_socket(self, container, params=None, ws=False):
         if params is None:
@@ -385,13 +378,9 @@ class Client(requests.Session):
 
         if stream:
             return self._stream_helper(response)
-        else:
-            output = self._result(response)
-            srch = r'Successfully built ([0-9a-f]+)'
-            match = re.search(srch, output)
-            if not match:
-                return None, output
-            return match.group(1), output
+        output = self._result(response)
+        match = re.search(r'Successfully built ([0-9a-f]+)', output)
+        return (None, output) if not match else (match[1], output)
 
     def commit(self, container, repository=None, tag=None, message=None,
                author=None, conf=None):
@@ -422,9 +411,7 @@ class Client(requests.Session):
         u = self._url("/containers/json")
         res = self._result(self._get(u, params=params), True)
 
-        if quiet:
-            return [{'Id': x['Id']} for x in res]
-        return res
+        return [{'Id': x['Id']} for x in res] if quiet else res
 
     def copy(self, container, resource):
         if isinstance(container, dict):
@@ -530,13 +517,9 @@ class Client(requests.Session):
         if stream:
             return self._multiplexed_response_stream_helper(res)
         elif six.PY3:
-            return bytes().join(
-                [x for x in self._multiplexed_buffer_helper(res)]
-            )
+            return bytes().join(list(self._multiplexed_buffer_helper(res)))
         else:
-            return str().join(
-                [x for x in self._multiplexed_buffer_helper(res)]
-            )
+            return str().join(list(self._multiplexed_buffer_helper(res)))
 
     def export(self, container):
         if isinstance(container, dict):
@@ -571,9 +554,7 @@ class Client(requests.Session):
             params['filters'] = utils.convert_filters(filters)
         res = self._result(self._get(self._url("/images/json"), params=params),
                            True)
-        if quiet:
-            return [x['Id'] for x in res]
-        return res
+        return [x['Id'] for x in res] if quiet else res
 
     def import_image(self, src=None, repository=None, tag=None, image=None):
         u = self._url("/images/create")
@@ -584,11 +565,8 @@ class Client(requests.Session):
 
         if src:
             try:
-                # XXX: this is ways not optimal but the only way
-                # for now to import tarballs through the API
-                fic = open(src)
-                data = fic.read()
-                fic.close()
+                with open(src) as fic:
+                    data = fic.read()
                 src = "-"
             except IOError:
                 # file does not exists or not a file (URL)
@@ -613,7 +591,7 @@ class Client(requests.Session):
             raise errors.DeprecatedMethod(
                 'insert is not available for API version >=1.12'
             )
-        api_url = self._url("/images/" + image + "/insert")
+        api_url = self._url(f"/images/{image}/insert")
         params = {
             'url': url,
             'path': path
@@ -699,13 +677,9 @@ class Client(requests.Session):
             if stream:
                 return self._multiplexed_response_stream_helper(res)
             elif six.PY3:
-                return bytes().join(
-                    [x for x in self._multiplexed_buffer_helper(res)]
-                )
+                return bytes().join(list(self._multiplexed_buffer_helper(res)))
             else:
-                return str().join(
-                    [x for x in self._multiplexed_buffer_helper(res)]
-                )
+                return str().join(list(self._multiplexed_buffer_helper(res)))
         return self.attach(
             container,
             stdout=stdout,
@@ -733,9 +707,9 @@ class Client(requests.Session):
         s_port = str(private_port)
         h_ports = None
 
-        h_ports = json_['NetworkSettings']['Ports'].get(s_port + '/udp')
+        h_ports = json_['NetworkSettings']['Ports'].get(f'{s_port}/udp')
         if h_ports is None:
-            h_ports = json_['NetworkSettings']['Ports'].get(s_port + '/tcp')
+            h_ports = json_['NetworkSettings']['Ports'].get(f'{s_port}/tcp')
 
         return h_ports
 
@@ -760,21 +734,13 @@ class Client(requests.Session):
             # file one more time in case anything showed up in there.
             if not self._auth_configs:
                 self._auth_configs = auth.load_config()
-            authcfg = auth.resolve_authconfig(self._auth_configs, registry)
-
-            # Do not fail here if no authentication exists for this specific
-            # registry as we can have a readonly pull. Just put the header if
-            # we can.
-            if authcfg:
+            if authcfg := auth.resolve_authconfig(self._auth_configs, registry):
                 headers['X-Registry-Auth'] = auth.encode_header(authcfg)
 
         response = self._post(self._url('/images/create'), params=params,
                               headers=headers, stream=stream, timeout=None)
 
-        if stream:
-            return self._stream_helper(response)
-        else:
-            return self._result(response)
+        return self._stream_helper(response) if stream else self._result(response)
 
     def push(self, repository, tag=None, stream=False,
              insecure_registry=False):
@@ -794,12 +760,7 @@ class Client(requests.Session):
             # file one more time in case anything showed up in there.
             if not self._auth_configs:
                 self._auth_configs = auth.load_config()
-            authcfg = auth.resolve_authconfig(self._auth_configs, registry)
-
-            # Do not fail here if no authentication exists for this specific
-            # registry as we can have a readonly pull. Just put the header if
-            # we can.
-            if authcfg:
+            if authcfg := auth.resolve_authconfig(self._auth_configs, registry):
                 headers['X-Registry-Auth'] = auth.encode_header(authcfg)
 
             response = self._post_json(u, None, headers=headers,
@@ -808,21 +769,20 @@ class Client(requests.Session):
             response = self._post_json(u, None, stream=stream, params=params)
 
         return stream and self._stream_helper(response) \
-            or self._result(response)
+                or self._result(response)
 
     def remove_container(self, container, v=False, link=False, force=False):
         if isinstance(container, dict):
             container = container.get('Id')
         params = {'v': v, 'link': link, 'force': force}
-        res = self._delete(self._url("/containers/" + container),
-                           params=params)
+        res = self._delete(self._url(f"/containers/{container}"), params=params)
         self._raise_for_status(res)
 
     def remove_image(self, image, force=False, noprune=False):
         if isinstance(image, dict):
             image = image.get('Id')
         params = {'force': force, 'noprune': noprune}
-        res = self._delete(self._url("/images/" + image), params=params)
+        res = self._delete(self._url(f"/images/{image}"), params=params)
         self._raise_for_status(res)
 
     def rename(self, container, name):
@@ -956,9 +916,7 @@ class Client(requests.Session):
         res = self._post(url, timeout=timeout)
         self._raise_for_status(res)
         json_ = res.json()
-        if 'StatusCode' in json_:
-            return json_['StatusCode']
-        return -1
+        return json_['StatusCode'] if 'StatusCode' in json_ else -1
 
 
 class AutoVersionClient(Client):

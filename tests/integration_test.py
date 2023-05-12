@@ -1136,7 +1136,7 @@ class TestRemoveLink(BaseTestCase):
 
         # Remove link
         linked_name = self.client.inspect_container(container2_id)['Name'][1:]
-        link_name = '%s/%s' % (linked_name, link_alias)
+        link_name = f'{linked_name}/{link_alias}'
         self.client.remove_container(link_name, link=True)
 
         # Link is gone
@@ -1381,11 +1381,10 @@ class TestLoadConfig(BaseTestCase):
         folder = tempfile.mkdtemp()
         self.tmp_folders.append(folder)
         cfg_path = os.path.join(folder, '.dockercfg')
-        f = open(cfg_path, 'w')
-        auth_ = base64.b64encode(b'sakuya:izayoi').decode('ascii')
-        f.write('auth = {0}\n'.format(auth_))
-        f.write('email = sakuya@scarlet.net')
-        f.close()
+        with open(cfg_path, 'w') as f:
+            auth_ = base64.b64encode(b'sakuya:izayoi').decode('ascii')
+            f.write('auth = {0}\n'.format(auth_))
+            f.write('email = sakuya@scarlet.net')
         cfg = docker.auth.load_config(cfg_path)
         self.assertNotEqual(cfg[docker.auth.INDEX_URL], None)
         cfg = cfg[docker.auth.INDEX_URL]
@@ -1400,12 +1399,11 @@ class TestLoadJSONConfig(BaseTestCase):
         folder = tempfile.mkdtemp()
         self.tmp_folders.append(folder)
         cfg_path = os.path.join(folder, '.dockercfg')
-        f = open(os.path.join(folder, '.dockercfg'), 'w')
-        auth_ = base64.b64encode(b'sakuya:izayoi').decode('ascii')
-        email_ = 'sakuya@scarlet.net'
-        f.write('{{"{0}": {{"auth": "{1}", "email": "{2}"}}}}\n'.format(
-            docker.auth.INDEX_URL, auth_, email_))
-        f.close()
+        with open(os.path.join(folder, '.dockercfg'), 'w') as f:
+            auth_ = base64.b64encode(b'sakuya:izayoi').decode('ascii')
+            email_ = 'sakuya@scarlet.net'
+            f.write('{{"{0}": {{"auth": "{1}", "email": "{2}"}}}}\n'.format(
+                docker.auth.INDEX_URL, auth_, email_))
         cfg = docker.auth.load_config(cfg_path)
         self.assertNotEqual(cfg[docker.auth.INDEX_URL], None)
         cfg = cfg[docker.auth.INDEX_URL]
@@ -1489,7 +1487,7 @@ class TestRegressions(unittest.TestCase):
     def test_443(self):
         dfile = io.BytesIO()
         with self.assertRaises(docker.errors.APIError) as exc:
-            for line in self.client.build(fileobj=dfile, tag="a/b/c"):
+            for _ in self.client.build(fileobj=dfile, tag="a/b/c"):
                 pass
         self.assertEqual(exc.exception.response.status_code, 500)
         dfile.close()

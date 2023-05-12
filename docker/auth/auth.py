@@ -29,10 +29,10 @@ DOCKER_CONFIG_FILENAME = '.dockercfg'
 def expand_registry_url(hostname, insecure=False):
     if hostname.startswith('http:') or hostname.startswith('https:'):
         return hostname
-    if utils.ping('https://' + hostname + '/v1/_ping'):
-        return 'https://' + hostname
+    if utils.ping(f'https://{hostname}/v1/_ping'):
+        return f'https://{hostname}'
     elif insecure:
-        return 'http://' + hostname
+        return f'http://{hostname}'
     else:
         raise errors.DockerException(
             "HTTPS endpoint unresponsive and insecure mode isn't enabled."
@@ -72,11 +72,14 @@ def resolve_authconfig(authconfig, registry=None):
     if registry in authconfig:
         return authconfig[registry]
 
-    for key, config in six.iteritems(authconfig):
-        if convert_to_hostname(key) == registry:
-            return config
-
-    return None
+    return next(
+        (
+            config
+            for key, config in six.iteritems(authconfig)
+            if convert_to_hostname(key) == registry
+        ),
+        None,
+    )
 
 
 def convert_to_hostname(url):
@@ -144,9 +147,7 @@ def load_config(config_path=None):
     # auth = AUTH_TOKEN
     # email = email@domain.com
     try:
-        data = []
-        for line in fileinput.input(config_file):
-            data.append(line.strip().split(' = ')[1])
+        data = [line.strip().split(' = ')[1] for line in fileinput.input(config_file)]
         if len(data) < 2:
             # Not enough data
             raise errors.InvalidConfigFile(
