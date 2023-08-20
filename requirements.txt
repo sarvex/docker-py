@@ -2,5 +2,5 @@ packaging==23.1
 paramiko==3.3.1
 pywin32==306; sys_platform == 'win32'
 requests==2.31.0
-urllib3==2.0.3
+urllib3==2.0.4
 websocket-client==1.6.0
